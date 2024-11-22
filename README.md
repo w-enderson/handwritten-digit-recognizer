@@ -1,1 +1,3 @@
-# rede-neural-para-reconhecer-d-gitos-manuscritos
+# Handwritten digit recognizer
+
+using neural networks
