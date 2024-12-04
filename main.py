@@ -1,43 +1,49 @@
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
+import tensorflow as tf
 from tensorflow.keras.datasets import mnist
-import numpy as np
+from tensorflow.keras import layers, models
+import matplotlib.pyplot as plt
 
-# Carregar os dados
-(X_train, y_train), (X_test, y_test) = mnist.load_data()
+# Load the MNIST dataset
+(x_train, y_train), (x_test, y_test) = mnist.load_data()
 
-print("train ", X_train.shape) 
-print("test ", X_test.shape) 
+# Normalize the data
+x_train, x_test = x_train/255.0, x_test/255.0
 
-class Neuron:
-    def __init__(self, x, w, b):
-        self.inputs = x
-        self.weights = w
-        self.bias = b
+# Reshape to include the channel (CNNs)
+x_train = x_train.reshape(-1, 28, 28, 1)
+x_test = x_test.reshape(-1, 28, 28, 1)
 
-    def ReLU(self, x):
-        return  max(0, x)
-    
-    def getOutput(self):
-        z = np.dot(self.inputs, self.weights) + self.bias
-        return self.ReLU(z)
+print(x_train.shape, x_test.shape)
 
-# inputs = np.array([1.0, 2.0, 3.0])
-# weights = np.ones(3, dtype=int)
-# bias = 0
+# Create the model
+model = models.Sequential([
+    layers.Conv2D(32, (3, 3), activation='relu', input_shape=(28, 28, 1)), 
+    layers.MaxPooling2D((2, 2)), 
+    layers.Conv2D(64, (3, 3), activation='relu'), 
+    layers.MaxPooling2D((2, 2)), 
+    layers.Flatten(),
+    layers.Dense(64, activation='relu'),  
+    layers.Dense(10, activation='softmax') 
+])
 
-# neuron = Neuron(inputs, weights, bias)
-# print(neuron.getOutput()) 
+# Compile the model
+model.compile(optimizer='adam', 
+              loss='sparse_categorical_crossentropy', 
+              metrics=['accuracy']) 
 
-class NeuralNetwork:
-    def __init__(self, neuronsLayer):
-        self.neuronsLayer = neuronsLayer
+# Train the model
+history = model.fit(x_train, y_train, epochs=5, validation_split=0.2) 
 
-    def create(self):
-        pass
+# Evaluate the model
+test_loss, test_acc = model.evaluate(x_test, y_test, verbose=2)  
+print(f"Accuracy: {test_acc}")
 
+predictions = model.predict(x_test) 
 
-
-
-
+# Visualize an example
+plt.imshow(x_test[0].reshape(28, 28), cmap='gray') 
+plt.title(f"Prediction: {predictions[0].argmax()}") 
+plt.show()
